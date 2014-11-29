@@ -1,0 +1,43 @@
+<configure
+    xmlns="http://namespaces.zope.org/zope"
+    xmlns:plone="http://namespaces.plone.org/plone"
+    i18n_domain="collective.gitresource">
+
+  <include package="collective.gitresource" file="meta.zcml" />
+
+  <plone:git-remote
+      uri="git://github.com/collective/diazotheme.frameworks.git"
+      directory="diazotheme/frameworks/bootstrap"
+      name="bootstrap-framework"
+      type="theme"
+      />
+
+  <plone:git-remote
+      uri="git://github.com/collective/diazotheme.frameworks.git"
+      directory="diazotheme/frameworks/plone"
+      name="plone"
+      type="theme"
+      />
+
+  <plone:git-remote
+      uri="git://github.com/collective/diazotheme.bootswatch.git"
+      directory="diazotheme/bootswatch/bootswatch"
+      name="bootswatch"
+      type="theme"
+      />
+
+  <plone:git-remote
+      uri="git://github.com/collective/diazotheme.bootswatch.git"
+      directory="diazotheme/bootswatch/amelia"
+      name="amelia"
+      type="theme"
+      />
+
+  <plone:git-remote
+      uri="git://github.com/collective/diazotheme.bootswatch.git"
+      directory="diazotheme/bootswatch/amelia-narrow"
+      name="amelia-narrow"
+      type="theme"
+      />
+
+</configure>

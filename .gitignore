@@ -1,0 +1,13 @@
+syntax: glob
+*.egg-info
+*.mo
+*.pyc
+.idea
+.installed.cfg
+.mr.developer.cfg
+bin
+buildout-cache
+develop-eggs
+dist
+parts
+var
