@@ -3,7 +3,7 @@ Introduction
 
 dulwich_-based pure Python GIT-integration for `plone.resource`_.
 
-.. _dulwhich: https://pypi.python.org/pypi/dulwhich
+.. _dulwich: https://pypi.python.org/pypi/dulwich
 .. _plone.resource: https://pypi.python.org/pypi/plone.resource
 
 
