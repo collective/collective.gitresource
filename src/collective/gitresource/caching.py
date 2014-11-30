@@ -14,6 +14,6 @@ class FileLastModified(object):
 
     def __call__(self):
         return datetime.datetime.fromtimestamp(
-            self.context.bytes_iterator.last_modified,
+            self.context.bytes.last_modified,
             tz=tzlocal()
         )
