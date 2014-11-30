@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
+import zipfile
 
 from zExceptions import NotFound
 from plone.resource.interfaces import IResourceDirectory
@@ -10,6 +11,7 @@ from zope.location import ILocation
 
 from collective.gitresource.file import File
 from collective.gitresource.interfaces import IRepositoryManager
+
 
 logger = logging.getLogger('collective.gitresource')
 
@@ -88,28 +90,21 @@ class ResourceDirectory(object):
         return path in self.repository and self.repository[path] is not None
 
     def exportZip(self, out):
-        raise NotImplementedError()
+        base = self.directory
+        prefix = self.__name__
+        zf = zipfile.ZipFile(out, 'w')
 
-    # def exportZip(self, out):
-    #     prefix = self.__name__
-    #     zf = zipfile.ZipFile(out, 'w')
-    #
-    #     toStrip = len(self.directory.replace(os.path.sep, '/')) + 1
-    #
-    #     for (dirpath, dirnames, filenames) in os.walk(self.directory):
-    #         subpath = dirpath.replace(os.path.sep, '/')[toStrip:].strip('/')
-    #
-    #         for filename in filenames:
-    #             path = '/'.join([subpath, filename]).strip('/')
-    #
-    #             if any(any(filter.match(n) for filter in FILTERS)
-    #                    for n in path.split('/')
-    #             ):
-    #                 continue
-    #
-    #             zf.writestr('/'.join([prefix, path,]), self.readFile(path))
-    #
-    #     zf.close()
+        def export(directory, output):
+            for name in directory.listDirectory():
+                if directory.isFile(name):
+                    path = '/'.join([directory.directory, name]).strip('/')
+                    output.writestr('/'.join([prefix, path[len(base):]]),
+                                    directory.readFile(name))
+                elif directory.isDirectory(name):
+                    export(directory[name], output)
+
+        export(self, zf)
+        zf.close()
 
     # IWritableResourceDirectory
 
