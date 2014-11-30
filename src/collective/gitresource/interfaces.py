@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from plone.resource.interfaces import IWritableResourceDirectory
 from zope.interface import Interface
 from zope.interface import Attribute
 from zope.interface.common.mapping import IIterableMapping
@@ -24,3 +25,7 @@ class IRepositoryManager(IIterableMapping):
     """Utility for managing in-memory GIT-repositories
     mapping repository URIs to repositories
     """
+
+
+class IGitRemoteResourceDirectory(IWritableResourceDirectory):
+    """Writable GIT remote resource directory"""

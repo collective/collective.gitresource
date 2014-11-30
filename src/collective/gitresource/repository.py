@@ -13,7 +13,9 @@ from collective.gitresource.iterator import BytesIterator
 @implementer(IHead)
 class Head(dict):
 
-    def __init__(self, repo, head):
+    def __init__(self, repo, head, name='master'):
+        self.__name__ = name
+
         self._repo = repo
         self._head = head
 
@@ -30,7 +32,7 @@ class Head(dict):
     def __repr__(self):
         return '<{0:s} object at {1:s} of {2:s}>'.format(
             self.__class__.__name__,
-            self.branch,
+            self.__name__,
             repr(self._repo)[1:-1]
         )
 
@@ -62,7 +64,7 @@ class Repository(dict):
 
         # Init branches
         branches = dict([
-            (name.split('/')[-1], Head(self._repo, ref))
+            (name.split('/')[-1], Head(self._repo, ref, name))
             for name, ref in refs.items()
             if name.startswith('refs/head')
         ])

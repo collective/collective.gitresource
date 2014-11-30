@@ -62,7 +62,7 @@ def registerGitRemoteResourceDirectory(_context, uri, branch='master',
                                      'must have a specified resource type.')
         identifier = name or ''
 
-    directory = ResourceDirectory(uri, branch, directory, name)
+    directory = ResourceDirectory(uri, branch, directory, type, name)
 
     _context.action(
         discriminator=('plone:git-remote', identifier),

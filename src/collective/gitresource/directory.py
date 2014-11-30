@@ -3,7 +3,6 @@ import logging
 import zipfile
 
 from zExceptions import NotFound
-from plone.resource.interfaces import IResourceDirectory
 from zope.component import getUtility
 from zope.component.hooks import getSite
 from zope.interface import implementer
@@ -11,28 +10,38 @@ from zope.location import ILocation
 
 from collective.gitresource.file import File
 from collective.gitresource.interfaces import IRepositoryManager
+from collective.gitresource.interfaces import IGitRemoteResourceDirectory
 
 
 logger = logging.getLogger('collective.gitresource')
 
 
 @implementer(ILocation)
-@implementer(IResourceDirectory)
+@implementer(IGitRemoteResourceDirectory)
 class ResourceDirectory(object):
     """A resource directory based on files in the filesystem.
     """
 
     __allow_access_to_unprotected_subobjects__ = True
 
-    def __init__(self, uri, branch, directory, name, parent=None):
+    def __init__(self, uri, branch, directory,
+                 resource_type, name, parent=None):
         self.__name__ = name
         self.__parent = parent
 
+        self._type = resource_type
         self._uri = uri
         self._branch = branch
 
         self.directory = directory.strip('/')
         self.repository = getUtility(IRepositoryManager)[uri][branch]
+
+    # XXX: No interface defines resource directory requiring self.context...
+    @property
+    def context(self):
+        if self.__parent is None:
+            return getSite()
+        return self.__parent
 
     @property
     def __parent__(self):
@@ -50,7 +59,7 @@ class ResourceDirectory(object):
             return File(self, request, name, self.repository[path])
         elif self.isDirectory(name):
             return self.__class__(self._uri, self._branch, path,
-                                  self.__name__, self)
+                                  self._type, self.__name__, self)
         raise NotFound
 
     def __getitem__(self, name):
@@ -106,43 +115,34 @@ class ResourceDirectory(object):
         export(self, zf)
         zf.close()
 
-    # IWritableResourceDirectory
-
     def makeDirectory(self, path):
-        """Create the given path as a directory. (Returns successfully without
-        doing anything if the directory already exists.)
-        """
-        raise NotImplementedError()
+        self.repository[path] = None
 
     def writeFile(self, path, data):
-        """Write a file at the specified path.
-
-        Parent directories will be added if necessary. The final path component
-        gives the filename. If the file already exists, it will be overwritten.
-
-        ``data`` may be a string or file-like object.
-        """
-        raise NotImplementedError()
+        try:
+            self.repository[path] = data.read()
+        except AttributeError:
+            self.repository[path] = data
 
     def importZip(self, file):
-        """Imports the contents of a zip file into this directory.
-
-        ``file`` may be a filename, file-like object, or instance of
-        zipfile.ZipFile. The file data must be a ZIP archive.
-        """
+        # """Imports the contents of a zip file into this directory.
+        #
+        # ``file`` may be a filename, file-like object, or instance of
+        # zipfile.ZipFile. The file data must be a ZIP archive.
+        # """
         raise NotImplementedError()
 
     def __delitem__(self, name):
-        """Delete a file or directory inside this directory
-        """
+        # """Delete a file or directory inside this directory
+        # """
         raise NotImplementedError()
 
     def __setitem__(self, name, item):
-        """Add a file or directory as returned by ``__getitem__()``
-        """
+        # """Add a file or directory as returned by ``__getitem__()``
+        # """
         raise NotImplementedError()
 
     def rename(self, oldName, newName):
-        """Rename a child file or folder
-        """
+        # """Rename a child file or folder
+        # """
         raise NotImplementedError()

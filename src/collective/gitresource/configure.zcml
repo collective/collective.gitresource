@@ -24,4 +24,9 @@
       zcml:condition="installed z3c.caching"
       />
 
+  <include
+      file="browser.zcml"
+      zcml:condition="installed plone.resourceeditor"
+      />
+
 </configure>

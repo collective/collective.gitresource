@@ -1,0 +1,44 @@
+<configure
+    xmlns="http://namespaces.zope.org/zope"
+    xmlns:browser="http://namespaces.zope.org/browser"
+    i18n_domain="collective.gitresource">
+
+  <include package="plone.resourceeditor" />
+
+  <configure package="plone.resourceeditor">
+
+    <browser:page
+        name="plone.resourceeditor.filemanager"
+        for="collective.gitresource.interfaces.IGitRemoteResourceDirectory"
+        class="collective.gitresource.browser.FileManager"
+        template="editor.pt"
+        permission="plone.resourceeditor.ManageSources"
+        />
+
+    <browser:page
+        name="plone.resourceeditor.getfile"
+        for="collective.gitresource.interfaces.IGitRemoteResourceDirectory"
+        class="collective.gitresource.browser.FileManager"
+        attribute="getFile"
+        permission="plone.resourceeditor.ManageSources"
+        />
+
+    <browser:page
+        name="plone.resourceeditor.savefile"
+        for="collective.gitresource.interfaces.IGitRemoteResourceDirectory"
+        class="collective.gitresource.browser.FileManager"
+        attribute="saveFile"
+        permission="plone.resourceeditor.ManageSources"
+        />
+
+    <browser:page
+        name="plone.resourceeditor.filetree"
+        for="collective.gitresource.interfaces.IGitRemoteResourceDirectory"
+        class="collective.gitresource.browser.FileManager"
+        attribute="filetree"
+        permission="plone.resourceeditor.ManageSources"
+        />
+
+  </configure>
+
+</configure>
