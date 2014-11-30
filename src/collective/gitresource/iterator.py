@@ -1,18 +1,23 @@
 # -*- coding: utf-8 -*-
 from io import BytesIO
+
 from ZPublisher.Iterators import IStreamIterator
 from zope.interface import implementer
 
+from collective.gitresource.interfaces import ILastModified
 
-@implementer(IStreamIterator)
+
+@implementer(IStreamIterator, ILastModified)
 class BytesIterator(BytesIO):
-    """Resource iterator that allows (inefficient) coercion to str/unicode.
+    """Resource iterator that knows last modification timestamp of its
+    data and allows (inefficient) coercion to str/unicode.
 
     This is needed for ResourceRegistries support, for example.
-    """
 
-    def __init__(self, data, stream_size=1 << 16):
+    """
+    def __init__(self, data, last_modified, stream_size=1 << 16):
         super(BytesIterator, self).__init__(data)
+        self.last_modified = last_modified
         self.stream_size = stream_size
 
     def next(self):

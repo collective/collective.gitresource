@@ -4,14 +4,13 @@ from plone.resource.zcml import IResourceDirectoryDirective
 from zope.component.zcml import handler
 from zope.configuration.exceptions import ConfigurationError
 from zope.interface import Interface
-
 from zope.schema import URI, ASCIILine
 from zope.schema import TextLine
 
-from collective.gitresource.directory import GitResourceDirectory
+from collective.gitresource.directory import ResourceDirectory
 
 
-class IGitResourceDirectoryDirective(Interface):
+class IGitRemoteResourceDirectoryDirective(Interface):
     """Register resource directories with the global registry.
     """
 
@@ -19,6 +18,12 @@ class IGitResourceDirectoryDirective(Interface):
         title=u'Repository URI',
         description=u'Valid GIT repository URI',
         required=True
+    )
+
+    branch = ASCIILine(
+        title=u'Branch',
+        description=u'Repository branch (defaults to master)',
+        required=False
     )
 
     directory = TextLine(
@@ -37,8 +42,8 @@ class IGitResourceDirectoryDirective(Interface):
 
 
 # noinspection PyShadowingBuiltins
-def registerGitResourceDirectory(_context, uri, directory='',
-                                 name=None, type=None):
+def registerGitRemoteResourceDirectory(_context, uri, branch='master',
+                                       directory='', name=None, type=None):
     """
     Register a new resource directory.
 
@@ -57,7 +62,7 @@ def registerGitResourceDirectory(_context, uri, directory='',
                                      'must have a specified resource type.')
         identifier = name or ''
 
-    directory = GitResourceDirectory(uri, directory, name)
+    directory = ResourceDirectory(uri, branch, directory, name)
 
     _context.action(
         discriminator=('plone:git-remote', identifier),

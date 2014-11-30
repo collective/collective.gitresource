@@ -15,14 +15,11 @@ class File(object):
     and return the file's contents
     """
 
-    def __init__(self, parent, request, name, iterator, length, modified):
+    def __init__(self, parent, request, name, bytes_iterator):
         self.request = request
         self.__name__ = name
         self.__parent__ = parent
-
-        self.lastModifiedTimestamp = modified
-        self.iterator = iterator
-        self.length = length
+        self.bytes = bytes_iterator
 
     def getContentType(self, default='application/octet-stream'):
         extension = os.path.splitext(self.__name__)[1].lower()
@@ -40,16 +37,16 @@ class File(object):
             response = request.response
 
         contentType = self.getContentType()
-        lastModifiedHeader = formatdate(
-            self.lastModifiedTimestamp, usegmt=True)
+        lastModifiedHeader = formatdate(self.bytes.last_modified,
+                                        usegmt=True)
 
         response.setHeader('Content-Type', contentType)
-        response.setHeader('Content-Length', self.length)
+        response.setHeader('Content-Length', len(self.bytes))
         response.setHeader('Last-Modified', lastModifiedHeader)
 
-        return self.iterator
+        return self.bytes
 
 
 @adapter(File)
 def rawReadFile(context):
-    return context.iterator.read()
+    return context.bytes.read()

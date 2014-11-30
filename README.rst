@@ -13,7 +13,6 @@ Status
 Updated 2014-11-29.
 
 - Uses git as memory only local repository (bare).
-- Uses HEAD. Branch-option planned.
 - Read only. Write support is planned as direct commit + push to the remote.
 - No pull. Manual pull via Plone control panel planned (incl. cache purges).
 - No caching. Relying on Front-end caching at first. Local copy as
@@ -35,6 +34,7 @@ Example
 
       <plone:git-remote
           uri="git://github.com/collective/diazotheme.frameworks.git"
+          branch="master"
           directory="diazotheme/frameworks/bootstrap"
           name="bootstrap-framework"
           type="theme"

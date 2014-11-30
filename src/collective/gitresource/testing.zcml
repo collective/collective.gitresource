@@ -7,6 +7,7 @@
 
   <plone:git-remote
       uri="git://github.com/collective/diazotheme.frameworks.git"
+      branch="master"
       directory="diazotheme/frameworks/bootstrap"
       name="bootstrap-framework"
       type="theme"

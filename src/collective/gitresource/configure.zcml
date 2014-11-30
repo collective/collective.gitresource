@@ -5,6 +5,11 @@
 
   <include package="collective.gitresource" file="meta.zcml" />
 
+  <utility
+      provides="collective.gitresource.interfaces.IRepositoryManager"
+      factory="collective.gitresource.repository.RepositoryManager"
+      />
+
   <adapter
       provides="zope.filerepresentation.interfaces.IRawReadFile"
       for="collective.gitresource.file.File"
@@ -15,7 +20,7 @@
   <adapter
       provides="z3c.caching.interfaces.ILastModified"
       for="collective.gitresource.file.File"
-      factory="plone.resource.file.FileLastModified"
+      factory="collective.gitresource.caching.FileLastModified"
       zcml:condition="installed z3c.caching"
       />
 

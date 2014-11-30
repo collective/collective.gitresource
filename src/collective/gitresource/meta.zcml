@@ -5,8 +5,8 @@
     <meta:directive
         name="git-remote"
         namespace="http://namespaces.plone.org/plone"
-        schema=".zcml.IGitResourceDirectoryDirective"
-        handler=".zcml.registerGitResourceDirectory"
+        schema=".zcml.IGitRemoteResourceDirectoryDirective"
+        handler=".zcml.registerGitRemoteResourceDirectory"
         />
 
 </configure>
