@@ -10,14 +10,28 @@ dulwich_-based pure Python GIT-integration for `plone.resource`_.
 Status
 ------
 
-Updated 2014-11-29.
+Updated 2014-12-01.
 
 - Uses git as memory only local repository (bare).
-- Read only. Write support is planned as direct commit + push to the remote.
-- No pull. Manual pull via Plone control panel planned (incl. cache purges).
-- No caching. Relying on Front-end caching at first. Local copy as
-  persistent `plone.resource`_ directory would be implementable.
-- All files have the time of the last commit as their last modification date.
+- Tries to commit + push after each write / save.
+
+  * git+ssh-protocol works with GitHub (requires proper credentials
+    been configured for the user running Plone)
+
+  * git+https-protocol support is planned (as a way to set credentials
+    using product-config), but does not work with GitHub (dulwich_ tries
+    to use API, which GitHub has deprecated)
+
+  * currently commits as the current Plone-user (support to configure
+    the user using product-cofnig is planned)
+
+- No pull (manual pull via Plone control panel planned [incl. cache purges])
+- No persistent caching (relying on shared memory between threads and front-end
+  caching)
+- All files have the time of the last commit as their last modification time
+  (correct modification time can be supported if it there's a fast way to
+  look it up from the repository data without iterating through all the
+  commits)
 
 
 Example
