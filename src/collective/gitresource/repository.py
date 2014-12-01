@@ -133,7 +133,7 @@ class Head(dict):
         )
 
         # Update "index"
-        super(Head, self).__setitem__(path, (blob._sha, mode))
+        super(Head, self).__setitem__(path, (blob.id, mode))
 
 
 @implementer(IRepository)
