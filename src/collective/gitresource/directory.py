@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import logging
 import zipfile
 
 from zExceptions import NotFound
@@ -11,9 +10,6 @@ from zope.location import ILocation
 from collective.gitresource.file import File
 from collective.gitresource.interfaces import IRepositoryManager
 from collective.gitresource.interfaces import IGitRemoteResourceDirectory
-
-
-logger = logging.getLogger('collective.gitresource')
 
 
 @implementer(ILocation)
@@ -115,16 +111,18 @@ class ResourceDirectory(object):
         export(self, zf)
         zf.close()
 
-    def makeDirectory(self, path):
+    def makeDirectory(self, name):
+        path = '/'.join([self.directory, name])
         self.repository[path] = None
 
-    def writeFile(self, path, data):
+    def writeFile(self, name, data):
+        path = '/'.join([self.directory, name])
         try:
             self.repository[path] = data.read()
         except AttributeError:
             self.repository[path] = data
 
-    def importZip(self, file):
+    def importZip(self, file_):
         # """Imports the contents of a zip file into this directory.
         #
         # ``file`` may be a filename, file-like object, or instance of

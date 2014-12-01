@@ -48,21 +48,21 @@ Example
           />
 
       <plone:git-remote
-          uri="git://github.com/collective/diazotheme.bootswatch.git"
+          uri="git+ssh://git@github.com/collective/diazotheme.bootswatch.git"
           directory="diazotheme/bootswatch/bootswatch"
           name="bootswatch"
           type="theme"
           />
 
       <plone:git-remote
-          uri="git://github.com/collective/diazotheme.bootswatch.git"
+          uri="git+ssh://git@github.com/collective/diazotheme.bootswatch.git"
           directory="diazotheme/bootswatch/amelia"
           name="amelia"
           type="theme"
           />
 
       <plone:git-remote
-          uri="git://github.com/collective/diazotheme.bootswatch.git"
+          uri="git+ssh://git@github.com/collective/diazotheme.bootswatch.git"
           directory="diazotheme/bootswatch/amelia-narrow"
           name="amelia-narrow"
           type="theme"
