@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 import os
 import json
-from Products.Five.browser.pagetemplatefile import ViewPageTemplateFile
 import datetime
-from zope.cachedescriptors import property
 
+from zope.cachedescriptors import property
 from plone.resourceeditor.browser import FileManager as FileManagerBase
 from zope.i18n import translate
 
