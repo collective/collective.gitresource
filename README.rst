@@ -23,9 +23,9 @@ Updated 2014-12-01.
     to use API, which GitHub has deprecated)
 
   * currently commits as the current Plone-user (support to configure
-    the user using product-cofnig is planned)
+    the user using product-config is planned)
 
-- No pull (manual pull via Plone control panel planned [incl. cache purges])
+- No pull, but can push to plone (no authentication (!), no cache purge).
 - No persistent caching (relying on shared memory between threads and front-end
   caching)
 - All files have the time of the last commit as their last modification time

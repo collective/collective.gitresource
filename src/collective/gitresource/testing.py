@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from App.config import getConfiguration
+from App.config import setConfiguration
 from plone.app.robotframework.testing import REMOTE_LIBRARY_BUNDLE_FIXTURE
 from plone.app.testing import FunctionalTesting
 from plone.app.testing import IntegrationTesting
@@ -11,6 +13,15 @@ class GitResourceLayer(PloneSandboxLayer):
     defaultBases = (PLONE_FIXTURE,)
 
     def setUpZope(self, app, configurationContext):
+
+        # Set product configuration
+        cfg = getConfiguration()
+        cfg.product_config = {
+            'collective.gitresource': {
+            }
+        }
+        setConfiguration(cfg)
+
         import plone.app.theming
         self.loadZCML(package=plone.app.theming)
 

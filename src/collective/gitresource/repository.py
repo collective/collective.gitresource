@@ -4,11 +4,13 @@ import os
 import datetime
 import time
 
+from App.config import getConfiguration
 import dateutil
 from dulwich.client import get_transport_and_path
+from dulwich.client import HttpGitClient
 from dulwich.index import cleanup_mode
 from dulwich.index import commit_tree
-from dulwich.objects import Blob
+from dulwich.objects import Blob, ZERO_SHA
 from dulwich.objects import Commit
 from dulwich.repo import MemoryRepo
 from zope.component.hooks import getSite
@@ -23,10 +25,24 @@ from collective.gitresource.iterator import BytesIterator
 logger = logging.getLogger('collective.gitresource')
 
 
+# noinspection PyTypeChecker
+def get_index(head, repo):
+    index = {}
+    tree = repo.object_store[head].tree
+    for entry in repo.object_store.iter_tree_contents(tree):
+        index[entry.path] = entry.sha, entry.mode
+    for path in set(filter(bool, map(os.path.dirname, index))):
+        index.setdefault(path, (None, None))
+        while os.path.dirname(path):
+            path = os.path.dirname(path)
+            index.setdefault(path, (None, None))
+    return index
+
+
 @implementer(IHead)
 class Head(dict):
 
-    # noinspection PyProtectedMember,PyTypeChecker
+    # noinspection PyProtectedMember
     def __init__(self, repo, head, name='refs/heads/master'):
         self.__parent__ = repo
         self.__name__ = name
@@ -34,16 +50,7 @@ class Head(dict):
         self._repo = repo._repo
         self._head = head
 
-        entries = {}
-        tree = self._repo.object_store[head].tree
-        for entry in self._repo.object_store.iter_tree_contents(tree):
-            entries[entry.path] = entry.sha, entry.mode
-        for path in set(filter(bool, map(os.path.dirname, entries))):
-            entries.setdefault(path, (None, None))
-            while os.path.dirname(path):
-                path = os.path.dirname(path)
-                entries.setdefault(path, (None, None))
-        super(Head, self).__init__(entries)
+        super(Head, self).__init__(get_index(self._head, self._repo))
 
     def __repr__(self):
         return '<{0:s} object at {1:s} of {2:s}>'.format(
@@ -54,6 +61,12 @@ class Head(dict):
 
     # noinspection PyProtectedMember
     def __getitem__(self, path):
+        # Re-build index when out of sync
+        head = self._repo.refs[self.__name__]
+        if self._head != head:
+            self._head = head
+            super(Head, self).__init__(get_index(self._head, self._repo))
+
         sha, mode = super(Head, self).__getitem__(path)
         if sha is not None:
             blob = self._repo.object_store[sha]
@@ -142,19 +155,33 @@ class Repository(dict):
         self._client, self._host_path = get_transport_and_path(uri)
         self._repo = MemoryRepo()
 
+        # Set HTTP Basic Authorization header when available and supported
+        product_config = getattr(getConfiguration(), 'product_config', {})
+        my_config = product_config.get('collective.gitresource', {})
+        if uri in my_config and isinstance(self._client, HttpGitClient):
+            self._client.opener.addheaders.append(
+                'Authorization', 'Basic {0:s}'.format(
+                    my_config[uri].encode('base64').strip()))
+
+        def determine_wants_heads(haves):
+            return [s for (r, s) in haves.iteritems()
+                    if r.startswith('refs/heads') and not r.endswith("^{}")
+                    and s not in self._repo.object_store and s != ZERO_SHA]
+
         # Do initial fetch
-        # TODO: Should be more lazy (currently fetches the whole repo)
         refs = self._client.fetch(
             self._host_path, self._repo,
-            determine_wants=self._repo.object_store.determine_wants_all,
+            determine_wants=determine_wants_heads,
             progress=logger.info
         )
+        for ref, sha in refs.items():
+            self._repo.refs[ref] = sha
 
         # Init branches
         branches = dict([
             (name.split('/')[-1], Head(self, ref, name))
             for name, ref in refs.items()
-            if name.startswith('refs/head')
+            if name.startswith('refs/heads')
         ])
 
         # Finish init
@@ -167,7 +194,6 @@ class Repository(dict):
 
 @implementer(IRepositoryManager)
 class RepositoryManager(dict):
-
     def __getitem__(self, uri):
         if uri not in self:
             self[uri] = Repository(uri)

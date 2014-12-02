@@ -8,6 +8,7 @@ from zope.interface import implementer
 from zope.location import ILocation
 
 from collective.gitresource.file import File
+from collective.gitresource.git import GitView
 from collective.gitresource.interfaces import IRepositoryManager
 from collective.gitresource.interfaces import IGitRemoteResourceDirectory
 
@@ -50,12 +51,23 @@ class ResourceDirectory(object):
         self.__parent = value
 
     def publishTraverse(self, request, name):
-        path = '/'.join([self.directory, name])
-        if self.isFile(name):
-            return File(self, request, name, self.repository[path])
-        elif self.isDirectory(name):
-            return self.__class__(self._uri, self._branch, path,
-                                  self._type, self.__name__, self)
+        # GIT
+        environ = getattr(request, 'environ', {})
+        content_type = environ.get('CONTENT_TYPE', '')
+        if (request and content_type.startswith('application/x-git')
+                or request and request.get('service', '').startswith('git-')):
+            key = 'TraversalRequestNameStack'
+            path = '/'.join([name] + list(request.get(key) or ()))
+            request[key] = []  # end of traversal
+            return GitView(self, request, path)
+        # Browser
+        else:
+            path = '/'.join([self.directory, name])
+            if self.isFile(name):
+                return File(self, request, name, self.repository[path])
+            elif self.isDirectory(name):
+                return self.__class__(self._uri, self._branch, path,
+                                      self._type, self.__name__, self)
         raise NotFound
 
     def __getitem__(self, name):

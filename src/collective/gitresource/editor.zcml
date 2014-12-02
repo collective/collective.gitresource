@@ -10,7 +10,7 @@
     <browser:page
         name="plone.resourceeditor.filemanager"
         for="collective.gitresource.interfaces.IGitRemoteResourceDirectory"
-        class="collective.gitresource.browser.FileManager"
+        class="collective.gitresource.editor.FileManager"
         template="editor.pt"
         permission="plone.resourceeditor.ManageSources"
         />
@@ -18,7 +18,7 @@
     <browser:page
         name="plone.resourceeditor.getfile"
         for="collective.gitresource.interfaces.IGitRemoteResourceDirectory"
-        class="collective.gitresource.browser.FileManager"
+        class="collective.gitresource.editor.FileManager"
         attribute="getFile"
         permission="plone.resourceeditor.ManageSources"
         />
@@ -26,7 +26,7 @@
     <browser:page
         name="plone.resourceeditor.savefile"
         for="collective.gitresource.interfaces.IGitRemoteResourceDirectory"
-        class="collective.gitresource.browser.FileManager"
+        class="collective.gitresource.editor.FileManager"
         attribute="saveFile"
         permission="plone.resourceeditor.ManageSources"
         />
@@ -34,7 +34,7 @@
     <browser:page
         name="plone.resourceeditor.filetree"
         for="collective.gitresource.interfaces.IGitRemoteResourceDirectory"
-        class="collective.gitresource.browser.FileManager"
+        class="collective.gitresource.editor.FileManager"
         attribute="filetree"
         permission="plone.resourceeditor.ManageSources"
         />
