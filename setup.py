@@ -26,7 +26,11 @@ setup(
         'plone.resource',
         'dulwich',
     ],
-    extras_require={'test': [
+    extras_require={'redis': [
+        'redis',
+        'redis_collections',
+        'collective.monkeypatcher'
+    ], 'test': [
         'plone.app.testing',
         'plone.app.theming',
         'plone.app.robotframework',

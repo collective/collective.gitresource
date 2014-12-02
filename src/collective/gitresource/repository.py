@@ -8,13 +8,19 @@ from App.config import getConfiguration
 import dateutil
 from dulwich.client import get_transport_and_path
 from dulwich.client import HttpGitClient
+from dulwich.objects import ZERO_SHA
+from dulwich.config import ConfigFile
 from dulwich.index import cleanup_mode
 from dulwich.index import commit_tree
-from dulwich.objects import Blob, ZERO_SHA
+from dulwich.object_store import MemoryObjectStore
+from dulwich.objects import Blob
 from dulwich.objects import Commit
-from dulwich.repo import MemoryRepo
+from dulwich.refs import DictRefsContainer
+from dulwich.repo import MemoryRepo, BaseRepo
+from zope.component import getUtility
 from zope.component.hooks import getSite
 from zope.interface import implementer
+import pkg_resources
 
 from collective.gitresource.interfaces import IHead
 from collective.gitresource.interfaces import IRepository
@@ -22,7 +28,49 @@ from collective.gitresource.interfaces import IRepositoryManager
 from collective.gitresource.iterator import BytesIterator
 
 
+try:
+    pkg_resources.get_distribution('redis_collections')
+except pkg_resources.DistributionNotFound:
+    HAS_REDIS = False
+else:
+    import cPickle
+    from redis import StrictRedis
+    from redis_collections import Dict
+    HAS_REDIS = True
+
+
 logger = logging.getLogger('collective.gitresource')
+
+
+class RedisObjectStore(MemoryObjectStore):
+    def __init__(self, redis, prefix):
+        super(RedisObjectStore, self).__init__()
+        self._data = Dict(redis=redis, pickler=cPickle,
+                          key='{0:s}:data'.format(prefix))
+
+
+class RedisDictRefsContainer(DictRefsContainer):
+
+    def __init__(self, redis, prefix):
+        super(RedisDictRefsContainer, self).__init__(
+            Dict(redis=redis, pickler=cPickle,
+                 key='{0:s}:refs'.format(prefix))
+        )
+        self._peeled = Dict(redis=redis, pickler=cPickle,
+                            key='{0:s}:peeled'.format(prefix))
+
+
+# noinspection PyAbstractClass
+class RedisRepo(MemoryRepo):
+
+    def __init__(self, redis, prefix):
+        BaseRepo.__init__(self,
+                          RedisObjectStore(redis, prefix),
+                          RedisDictRefsContainer(redis, prefix))
+        self._named_files = Dict(redis=redis, pickler=cPickle,
+                                 key='{0:s}:named_files'.format('prefix'))
+        self._config = ConfigFile()
+        self.bare = True
 
 
 # noinspection PyTypeChecker
@@ -153,7 +201,13 @@ class Head(dict):
 class Repository(dict):
     def __init__(self, uri):
         self._client, self._host_path = get_transport_and_path(uri)
-        self._repo = MemoryRepo()
+
+        # Choose repo
+        if HAS_REDIS and getUtility(IRepositoryManager).redis is not None:
+            self._repo = RedisRepo(redis=getUtility(IRepositoryManager).redis,
+                                   prefix=uri)
+        else:
+            self._repo = MemoryRepo()
 
         # Set HTTP Basic Authorization header when available and supported
         product_config = getattr(getConfiguration(), 'product_config', {})
@@ -164,9 +218,15 @@ class Repository(dict):
                     my_config[uri].encode('base64').strip()))
 
         def determine_wants_heads(haves):
-            return [s for (r, s) in haves.iteritems()
-                    if r.startswith('refs/heads') and not r.endswith("^{}")
-                    and s not in self._repo.object_store and s != ZERO_SHA]
+            wants = dict([(r, s) for (r, s) in haves.iteritems()
+                          if (r == 'HEAD' or r.startswith('refs/heads'))
+                          and not r.endswith("^{}")
+                          and s != ZERO_SHA])
+            assert wants, 'No heads found. Cannot continue without any.'
+            new_heads = [s for s in wants.values()
+                         if s not in self._repo.object_store]
+            # MemoRepo needs always at least one head to work
+            return set(new_heads) or [wants.get('HEAD', wants.values()[0])]
 
         # Do initial fetch
         refs = self._client.fetch(
@@ -174,8 +234,10 @@ class Repository(dict):
             determine_wants=determine_wants_heads,
             progress=logger.info
         )
+        # Update only those heads, which have been fetched from remote
         for ref, sha in refs.items():
-            self._repo.refs[ref] = sha
+            if sha in self._repo.object_store:
+                self._repo.refs[ref] = sha
 
         # Init branches
         branches = dict([
@@ -194,6 +256,28 @@ class Repository(dict):
 
 @implementer(IRepositoryManager)
 class RepositoryManager(dict):
+
+    redis = None
+
+    def __init__(self):
+        super(RepositoryManager, self).__init__()
+
+        product_config = getattr(getConfiguration(), 'product_config', {})
+        gitresource_config = product_config.get('collective.gitresource', {})
+
+        if HAS_REDIS:
+            # Parse configuration
+            redis = {}
+            for key, value in gitresource_config.items():
+                if key.startswith('redis.'):
+                    try:
+                        redis[key[6:]] = int(value)
+                    except ValueError:
+                        redis[key[6:]] = value
+
+            # Create connection
+            self.redis = StrictRedis(**redis)
+
     def __getitem__(self, uri):
         if uri not in self:
             self[uri] = Repository(uri)

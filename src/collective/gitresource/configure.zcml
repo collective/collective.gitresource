@@ -30,4 +30,9 @@
       zcml:condition="installed plone.resourceeditor"
       />
 
+  <include
+      file="monkey.zcml"
+      zcml:condition="installed collective.monkeypatcher"
+      />
+
 </configure>

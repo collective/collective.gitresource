@@ -6,11 +6,43 @@ import Globals
 
 from Products.Five import BrowserView
 from dulwich import web
+from dulwich.objects import hex_to_sha
 from dulwich.web import HTTPGitApplication
 from dulwich.web import HTTPGitRequest
 
 
 logger = logging.getLogger('collective.gitresource')
+
+
+def __getstate__(self):
+    def get_slots(klass):
+        slots = getattr(klass, '__slots__', [])
+        if isinstance(slots, tuple):
+            slots = list(slots)
+        elif isinstance(slots, str):
+            slots = list([slots])
+        for base_klass in klass.__bases__:
+            slots.extend(get_slots(base_klass))
+        return list(set(slots))
+
+    names = list(getattr(self, '__dict__', {}).keys())
+    names += get_slots(self.__class__)
+
+    state = dict([(name, getattr(self, name)) for name in names])
+
+    if '_sha' in state:
+        state['_sha'] = None
+    return state
+
+
+def __setstate__(self, state):
+    for key, value in state.items():
+        setattr(self, key, value)
+
+    if '_sha' in state and hasattr(self, 'sha'):
+        self.sha()
+    if '_sha' in state and hasattr(self, '_hexsha'):
+        self._sha = hex_to_sha(self._hexsha)
 
 
 def handle_service_request(req, backend, mat):

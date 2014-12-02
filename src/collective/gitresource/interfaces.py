@@ -25,6 +25,7 @@ class IRepositoryManager(IIterableMapping):
     """Utility for managing in-memory GIT-repositories
     mapping repository URIs to repositories
     """
+    redis = Attribute('Redis connection')
 
 
 class IGitRemoteResourceDirectory(IWritableResourceDirectory):

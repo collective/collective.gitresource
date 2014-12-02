@@ -1,0 +1,104 @@
+<configure
+    xmlns="http://namespaces.zope.org/zope"
+    xmlns:monkey="http://namespaces.plone.org/monkey"
+    i18n_domain="collective.gitresource">
+
+  <include package="collective.monkeypatcher" />
+
+  <monkey:patch
+      description="Patch dulwich.objects.FixedSha pickleable (__getstate__)"
+      class="dulwich.objects.FixedSha"
+      ignoreOriginal="true"
+      original="__getstate__"
+      replacement="collective.gitresource.git.__getstate__"
+      />
+
+  <monkey:patch
+      description="Patch dulwich.objects.FixedSha pickleable (__setstate__)"
+      class="dulwich.objects.FixedSha"
+      ignoreOriginal="true"
+      original="__setstate__"
+      replacement="collective.gitresource.git.__setstate__"
+      />
+
+  <monkey:patch
+      description="Patch dulwich.objects.ShaFile pickleable (__getstate__)"
+      class="dulwich.objects.ShaFile"
+      ignoreOriginal="true"
+      original="__getstate__"
+      replacement="collective.gitresource.git.__getstate__"
+      />
+
+  <monkey:patch
+      description="Patch dulwich.objects.ShaFile pickleable (__setstate__)"
+      class="dulwich.objects.ShaFile"
+      ignoreOriginal="true"
+      original="__setstate__"
+      replacement="collective.gitresource.git.__setstate__"
+      />
+
+  <monkey:patch
+      description="Patch dulwich.objects.Blob pickleable (__getstate__)"
+      class="dulwich.objects.Blob"
+      ignoreOriginal="true"
+      original="__getstate__"
+      replacement="collective.gitresource.git.__getstate__"
+      />
+
+  <monkey:patch
+      description="Patch dulwich.objects.Blob pickleable (__setstate__)"
+      class="dulwich.objects.Blob"
+      ignoreOriginal="true"
+      original="__setstate__"
+      replacement="collective.gitresource.git.__setstate__"
+      />
+
+  <monkey:patch
+      description="Patch dulwich.objects.Tag pickleable (__getstate__)"
+      class="dulwich.objects.Tag"
+      ignoreOriginal="true"
+      original="__getstate__"
+      replacement="collective.gitresource.git.__getstate__"
+      />
+
+  <monkey:patch
+      description="Patch dulwich.objects.Tag pickleable (__setstate__)"
+      class="dulwich.objects.Tag"
+      ignoreOriginal="true"
+      original="__setstate__"
+      replacement="collective.gitresource.git.__setstate__"
+      />
+
+  <monkey:patch
+      description="Patch dulwich.objects.Commit pickleable (__getstate__)"
+      class="dulwich.objects.Commit"
+      ignoreOriginal="true"
+      original="__getstate__"
+      replacement="collective.gitresource.git.__getstate__"
+      />
+
+  <monkey:patch
+      description="Patch dulwich.objects.Commit pickleable (__setstate__)"
+      class="dulwich.objects.Commit"
+      ignoreOriginal="true"
+      original="__setstate__"
+      replacement="collective.gitresource.git.__setstate__"
+      />
+
+  <monkey:patch
+      description="Patch dulwich.objects.Tree pickleable (__getstate__)"
+      class="dulwich.objects.Tree"
+      ignoreOriginal="true"
+      original="__getstate__"
+      replacement="collective.gitresource.git.__getstate__"
+      />
+
+  <monkey:patch
+      description="Patch dulwich.objects.Tree pickleable (__setstate__)"
+      class="dulwich.objects.Tree"
+      ignoreOriginal="true"
+      original="__setstate__"
+      replacement="collective.gitresource.git.__setstate__"
+      />
+
+</configure>
