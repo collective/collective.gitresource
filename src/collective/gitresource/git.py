@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import logging
 import re
+from AccessControl import ClassSecurityInfo
+import Globals
 
 from Products.Five import BrowserView
 from dulwich import web
@@ -31,6 +33,8 @@ def handle_service_request(req, backend, mat):
 
 class GitView(BrowserView, HTTPGitApplication):
 
+    security = ClassSecurityInfo()
+
     services_overrides = {
         ('POST', re.compile('/git-upload-pack$')): handle_service_request,
         ('POST', re.compile('/git-receive-pack$')): handle_service_request,
@@ -43,6 +47,9 @@ class GitView(BrowserView, HTTPGitApplication):
         self.services = HTTPGitApplication.services.copy()
         self.services.update(self.services_overrides)
 
+#   XXX: This would protect the call, but cannot get Git to authenticate...
+#   security.declareProtected('plone.resourceeditor: Manage Sources',
+#                             '__call__')
     def __call__(self, environ=None, start_response=None):
         path = self.path
         method = self.request['REQUEST_METHOD']
@@ -87,6 +94,8 @@ class GitView(BrowserView, HTTPGitApplication):
     def open_repository(self, path=None):
         # noinspection PyProtectedMember
         return self.context.repository._repo
+
+Globals.InitializeClass(GitView)
 
 
 class GitRequest(HTTPGitRequest):
