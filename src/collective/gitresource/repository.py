@@ -186,12 +186,16 @@ class Head(dict):
             return {self.__name__: commit.id}
 
         # Push to remote
-        self.__parent__._client.send_pack(
+        refs = self.__parent__._client.send_pack(
             self.__parent__._host_path,
             determine_wants,
             self._repo.object_store.generate_pack_contents,
             progress=logger.info
         )
+        # Update heads
+        for ref, sha in refs.items():
+            if sha in self._repo.object_store:
+                self._repo.refs[ref] = sha
 
         # Update "index"
         super(Head, self).__setitem__(path, (blob.id, mode))
@@ -217,11 +221,11 @@ class Repository(dict):
                 'Authorization', 'Basic {0:s}'.format(
                     my_config[uri].encode('base64').strip()))
 
-        def determine_wants_heads(haves):
+        def determine_wants(haves):
             wants = dict([(r, s) for (r, s) in haves.iteritems()
-                          if (r == 'HEAD' or r.startswith('refs/heads'))
-                          and not r.endswith("^{}")
-                          and s != ZERO_SHA])
+                          if not r.endswith("^{}")
+                          and (r == 'HEAD' or r.startswith('refs/heads'))
+                          and not s == ZERO_SHA])
             assert wants, 'No heads found. Cannot continue without any.'
             new_heads = [s for s in wants.values()
                          if s not in self._repo.object_store]
@@ -231,7 +235,7 @@ class Repository(dict):
         # Do initial fetch
         refs = self._client.fetch(
             self._host_path, self._repo,
-            determine_wants=determine_wants_heads,
+            determine_wants=determine_wants,
             progress=logger.info
         )
         # Update only those heads, which have been fetched from remote
