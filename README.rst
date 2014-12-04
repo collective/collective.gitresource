@@ -57,10 +57,6 @@ Updated 2014-12-04.
   Push url is just ``++resourcetype++myresource``,
   e.g. ``http://localhost:8080/Plone/++theme++mytheme/``.
 
-  **Warning:** Git-interface is currently public and there's no authentication.
-  This should be fixed to support HTTP Basic Auth (but did not manage to get
-  git send the credentials yet)
-
 - All files have the time of the last commit as their last modification time
   (correct modification time can be supported if it there's a fast way to
   look it up from the repository data without iterating through all the
