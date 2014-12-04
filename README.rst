@@ -52,7 +52,10 @@ Updated 2014-12-04.
   * currently commits as the current Plone-user (support to configure
     the user using product-config is planned)
 
-- No pull, but you can push to plone (and also clone and pull from plone)
+- No pull, but you can **push** to plone (and also clone and pull from plone)
+
+  Push url is just ``++resourcetype++myresource``,
+  e.g. ``http://localhost:8080/Plone/++theme++mytheme/``.
 
   Warning: Git-interface is currently public and there's no authentication.
   This should be fixed to support HTTP Basic Auth (but did not manage to
