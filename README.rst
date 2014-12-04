@@ -57,6 +57,9 @@ Updated 2014-12-04.
   Push url is just ``++resourcetype++myresource``,
   e.g. ``http://localhost:8080/Plone/++theme++mytheme/``.
 
+  **Note:** Git-interface is protected with
+  *plone.resourceeditor.ManageSources*-permission.
+
 - All files have the time of the last commit as their last modification time
   (correct modification time can be supported if it there's a fast way to
   look it up from the repository data without iterating through all the
