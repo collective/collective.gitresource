@@ -1,6 +1,3 @@
-include *
-
-recursive-include docs *
-recursive-include plone *
-
-global-exclude *pyc
+recursive-include src *
+include *.py *.txt *.rst LICENSE.*
+global-exclude *.pyc
