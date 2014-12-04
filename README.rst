@@ -31,7 +31,7 @@ Updated 2014-12-04.
          ...
      </product-config>
 
-  Warning: At least the HEAD of the remote repository is still always
+  **Warning:** At least the HEAD of the remote repository is still always
   fetched on start. This might be fixed, once there's an UI for manually
   pulling changes from remote repo.
 
@@ -57,9 +57,9 @@ Updated 2014-12-04.
   Push url is just ``++resourcetype++myresource``,
   e.g. ``http://localhost:8080/Plone/++theme++mytheme/``.
 
-  Warning: Git-interface is currently public and there's no authentication.
-  This should be fixed to support HTTP Basic Auth (but did not manage to
-  get git send the credentials yet)
+  **Warning:** Git-interface is currently public and there's no authentication.
+  This should be fixed to support HTTP Basic Auth (but did not manage to get
+  git send the credentials yet)
 
 - All files have the time of the last commit as their last modification time
   (correct modification time can be supported if it there's a fast way to
