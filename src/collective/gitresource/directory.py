@@ -31,7 +31,10 @@ class ResourceDirectory(object):
         self._branch = branch
 
         self.directory = directory.strip('/')
-        self.repository = getUtility(IRepositoryManager)[uri][branch]
+
+    @property
+    def repository(self):
+        return getUtility(IRepositoryManager)[self._uri][self._branch]
 
     # XXX: No interface defines resource directory requiring self.context...
     @property
