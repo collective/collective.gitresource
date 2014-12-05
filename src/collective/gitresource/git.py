@@ -78,30 +78,36 @@ class GitView(BrowserView, HTTPGitApplication):
         self.services.update(self.services_overrides)
 
     def __call__(self, environ=None, start_response=None):
-        # Must return 401 with explicit authentication for git
-        if not getSecurityManager().checkPermission(
+        if getSecurityManager().checkPermission(
                 'plone.resourceeditor: Manage Sources', self.context):
+            return self.__exec__()
+        else:
+            # Must return 401 with explicit authentication for git
             self.request.response.setStatus(401)
             self.request.response.setHeader('WWW-Authenticate', 'Basic')
             return u''
 
-        # And now we are authenticated
-        path = self.path
-        method = self.request['REQUEST_METHOD']
-        req = GitRequest(self.request, dumb=False, handlers=self.handlers)
-
+    def _get_handler_and_mat(self, req):
         mat = handler = None
+        method = self.request['REQUEST_METHOD']
         for service_method, service_path in self.services.iterkeys():
             if service_method != method:
                 continue
-            mat = service_path.search(path)
+            mat = service_path.search(self.path)
             if mat:
                 handler = self.services[service_method, service_path]
                 break
 
+        return handler, mat
+
+    def __exec__(self):
+        req = GitRequest(self.request, dumb=False, handlers=self.handlers)
+        method = self.request['REQUEST_METHOD']
+        handler, mat = self._get_handler_and_mat(req)
+
         if handler is None:
             return req.not_found(
-                'Sorry, that method is not supported: {0:s}'.format(path))
+                'Sorry, that method is not supported: {0:s}'.format(self.path))
 
         refs = self.open_repository().refs
         head = refs['HEAD']

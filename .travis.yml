@@ -19,7 +19,9 @@ install:
 #- gem install travis-artifacts
 #after_script:
 #- travis-artifacts upload --path parts/test
-script: bin/test
+script:
+- bin/test
+- bin/code-analysis
 env:
   matrix:
   - BUILDOUT=travis.cfg

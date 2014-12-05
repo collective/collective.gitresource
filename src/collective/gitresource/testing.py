@@ -28,8 +28,6 @@ try:
 except pkg_resources.DistributionNotFound:
     HAS_REDIS = False
 else:
-    from redis import StrictRedis
-    from redis_collections import Dict
     HAS_REDIS = True
 
 
