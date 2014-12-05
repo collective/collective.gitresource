@@ -41,7 +41,17 @@ def TestRepo():
     with open(os.path.join(repo.path, 'bar'), 'w') as fp:
         fp.write('python')
 
-    repo.stage(['foo', 'bar'])
+    repo_sub = os.path.join(repo.path, 'sub')
+    os.mkdir(repo_sub)
+
+    with open(os.path.join(repo_sub, 'foo'), 'w') as fp:
+        fp.write('sub_monty')
+    with open(os.path.join(repo_sub, 'bar'), 'w') as fp:
+        fp.write('sub_python')
+
+    repo.stage(['foo', 'bar',
+                os.path.join('sub', 'foo'),
+                os.path.join('sub', 'bar')])
     repo.do_commit(
         'The first commit',
         committer='John Doe <john.doe@example.com>'
@@ -85,11 +95,16 @@ class GitResourceLayer(PloneSandboxLayer):
     def setUpPloneSite(self, portal):
         sm = getSiteManager()
 
-        # Register repository
+        # Register repositories
         directory = ResourceDirectory(
             uri=self['repo'].path, branch='master', directory='',
             resource_type='test', name='repo')
         sm.registerUtility(directory, IResourceDirectory, '++test++repo')
+
+        directory = ResourceDirectory(
+            uri=self['repo'].path, branch='master', directory='sub',
+            resource_type='test', name='sub-repo')
+        sm.registerUtility(directory, IResourceDirectory, '++test++sub-repo')
 
         # Register traverser
         sm.registerAdapter(
