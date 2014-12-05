@@ -60,12 +60,12 @@ class ResourceDirectory(object):
         if (request and content_type.startswith('application/x-git')
                 or request and request.get('service', '').startswith('git-')):
             key = 'TraversalRequestNameStack'
-            path = '/'.join([name] + list(request.get(key) or ()))
+            path = '/'.join([name] + list(request.get(key) or ())).strip('/')
             request[key] = []  # end of traversal
             return GitView(self, request, path)
         # Browser
         else:
-            path = '/'.join([self.directory, name])
+            path = '/'.join([self.directory, name]).strip('/')
             if self.isFile(name):
                 return File(self, request, name, self.repository[path])
             elif self.isDirectory(name):
@@ -83,15 +83,15 @@ class ResourceDirectory(object):
         )
 
     def __contains__(self, name):
-        path = '/'.join([self.directory, name])
+        path = '/'.join([self.directory, name]).strip('/')
         return path in self.repository
 
     def openFile(self, name):
-        path = '/'.join([self.directory, name])
+        path = '/'.join([self.directory, name]).strip('/')
         return self.repository[path]
 
     def readFile(self, name):
-        path = '/'.join([self.directory, name])
+        path = '/'.join([self.directory, name]).strip('/')
         return self.repository[path].read()
 
     def listDirectory(self):
@@ -102,11 +102,11 @@ class ResourceDirectory(object):
                     yield path[len(directory):]
 
     def isDirectory(self, name):
-        path = '/'.join([self.directory, name])
+        path = '/'.join([self.directory, name]).strip('/')
         return path in self.repository and self.repository[path] is None
 
     def isFile(self, name):
-        path = '/'.join([self.directory, name])
+        path = '/'.join([self.directory, name]).strip('/')
         return path in self.repository and self.repository[path] is not None
 
     def exportZip(self, out):
@@ -127,11 +127,11 @@ class ResourceDirectory(object):
         zf.close()
 
     def makeDirectory(self, name):
-        path = '/'.join([self.directory, name])
+        path = '/'.join([self.directory, name]).strip('/')
         self.repository[path] = None
 
     def writeFile(self, name, data):
-        path = '/'.join([self.directory, name])
+        path = '/'.join([self.directory, name]).strip('/')
         try:
             self.repository[path] = data.read()
         except AttributeError:

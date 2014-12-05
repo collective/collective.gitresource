@@ -1,13 +1,27 @@
 # -*- coding: utf-8 -*-
+import os
+import tempfile
+import shutil
+
 from App.config import getConfiguration
 from App.config import setConfiguration
+from dulwich.repo import Repo
 import pkg_resources
 from plone.app.robotframework.testing import REMOTE_LIBRARY_BUNDLE_FIXTURE
 from plone.app.testing import FunctionalTesting
 from plone.app.testing import IntegrationTesting
 from plone.app.testing import PLONE_FIXTURE
 from plone.app.testing import PloneSandboxLayer
+from plone.resource.interfaces import IResourceDirectory
+from plone.resource.traversal import ResourceTraverser
 from plone.testing import z2
+from zope.component import getSiteManager
+from zope.interface import Interface
+from zope.publisher.interfaces import IRequest
+from zope.traversing.interfaces import ITraversable
+
+from collective.gitresource.directory import ResourceDirectory
+
 
 try:
     pkg_resources.get_distribution('redis_collections')
@@ -17,6 +31,26 @@ else:
     from redis import StrictRedis
     from redis_collections import Dict
     HAS_REDIS = True
+
+
+def TestRepo():
+    repo = Repo.init(tempfile.mkdtemp())
+
+    with open(os.path.join(repo.path, 'foo'), 'w') as fp:
+        fp.write('monty')
+    with open(os.path.join(repo.path, 'bar'), 'w') as fp:
+        fp.write('python')
+
+    repo.stage(['foo', 'bar'])
+    repo.do_commit(
+        'The first commit',
+        committer='John Doe <john.doe@example.com>'
+    )
+    return repo
+
+
+class TestTraverser(ResourceTraverser):
+    name = 'test'
 
 
 class GitResourceLayer(PloneSandboxLayer):
@@ -43,11 +77,30 @@ class GitResourceLayer(PloneSandboxLayer):
 
         import collective.gitresource
         self.loadZCML(package=collective.gitresource)
-        self.loadZCML(package=collective.gitresource,
-                      name='testing.zcml')
+
+#       self.loadZCML(package=collective.gitresource,
+#                     name='testing.zcml')
+        self['repo'] = TestRepo()
 
     def setUpPloneSite(self, portal):
+        sm = getSiteManager()
+
+        # Register repository
+        directory = ResourceDirectory(
+            uri=self['repo'].path, branch='master', directory='',
+            resource_type='test', name='repo')
+        sm.registerUtility(directory, IResourceDirectory, '++test++repo')
+
+        # Register traverser
+        sm.registerAdapter(
+            name='test', factory=TestTraverser,
+            required=(Interface, IRequest), provided=ITraversable)
+
+        # Maybe we'll test theme-editor support later...
         self.applyProfile(portal, "plone.app.theming:default")
+
+    def tearDownZope(self, app):
+        shutil.rmtree(self['repo'].path)
 
 GITRESOURCE_FIXTURE = GitResourceLayer()
 
