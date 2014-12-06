@@ -80,46 +80,45 @@ class GitView(BrowserView, HTTPGitApplication):
     def __call__(self, environ=None, start_response=None):
         if getSecurityManager().checkPermission(
                 'plone.resourceeditor: Manage Sources', self.context):
-            return self.__exec__()
+            return self._handle()
         else:
             # Must return 401 with explicit authentication for git
             self.request.response.setStatus(401)
             self.request.response.setHeader('WWW-Authenticate', 'Basic')
             return u''
 
-    def _get_handler_and_mat(self, req):
-        mat = handler = None
+    def _get_handler_and_regex_match(self):
+        handler = regex_match = None
         method = self.request['REQUEST_METHOD']
         for service_method, service_path in self.services.iterkeys():
             if service_method != method:
                 continue
-            mat = service_path.search(self.path)
-            if mat:
+            regex_match = service_path.search(self.path)
+            if regex_match:
                 handler = self.services[service_method, service_path]
                 break
+        return handler, regex_match
 
-        return handler, mat
-
-    def __exec__(self):
-        req = GitRequest(self.request, dumb=False, handlers=self.handlers)
+    def _handle(self):
+        request = GitRequest(self.request, dumb=False, handlers=self.handlers)
         method = self.request['REQUEST_METHOD']
-        handler, mat = self._get_handler_and_mat(req)
 
+        # Get handler
+        handler, regex_match = self._get_handler_and_regex_match()
         if handler is None:
-            return req.not_found(
+            return request.not_found(
                 'Sorry, that method is not supported: {0:s}'.format(self.path))
 
+        # Store HEAD before changes
         refs = self.open_repository().refs
         head = refs['HEAD']
-
-        # Store HEAD before changes
         if method == 'POST':
             for name in refs.keys():
                 if name != 'HEAD' and refs[name] == refs['HEAD']:
                     head = name
 
         # Execute
-        result = handler(req, self, mat)
+        result = handler(request, self, regex_match)
         for text in result:
             self.request.response.write(text)
 
