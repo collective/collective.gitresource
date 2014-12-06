@@ -6,6 +6,9 @@ dulwich_-based pure Python GIT-integration for `plone.resource`_.
 .. _dulwich: https://pypi.python.org/pypi/dulwich
 .. _plone.resource: https://pypi.python.org/pypi/plone.resource
 
+.. image:: https://secure.travis-ci.org/collective/collective.gitresource.png
+   :target: http://travis-ci.org/collective/collective.gitresource
+
 
 Status
 ------
