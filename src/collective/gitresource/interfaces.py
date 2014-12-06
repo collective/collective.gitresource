@@ -29,4 +29,6 @@ class IRepositoryManager(IIterableMapping):
 
 
 class IGitRemoteResourceDirectory(IWritableResourceDirectory):
-    """Writable GIT remote resource directory"""
+    """Writable GIT remote resource directory
+    """
+    repository = Attribute('IRepository instance')

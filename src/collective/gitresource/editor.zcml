@@ -1,9 +1,25 @@
 <configure
     xmlns="http://namespaces.zope.org/zope"
+    xmlns:zcml="http://namespaces.zope.org/zcml"
     xmlns:browser="http://namespaces.zope.org/browser"
     i18n_domain="collective.gitresource">
 
   <include package="plone.resourceeditor" />
+
+  <browser:defaultView
+      name="manage"
+      for="collective.gitresource.interfaces.IGitRemoteResourceDirectory"
+      zcml:condition="installed plone.resourceeditor"
+      />
+
+  <browser:page
+      name="manage"
+      for="plone.resource.interfaces.IResourceDirectory"
+      class="collective.gitresource.editor.FileManager"
+      template="editor.pt"
+      permission="plone.app.controlpanel.Themes"
+      zcml:condition="installed plone.resourceeditor"
+      />
 
   <configure package="plone.resourceeditor">
 

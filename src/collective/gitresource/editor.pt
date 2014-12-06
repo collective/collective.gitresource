@@ -1,0 +1,23 @@
+<tal:doctype tal:replace="structure string:&lt;!DOCTYPE html&gt;" />
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en"
+      xmlns:tal="http://xml.zope.org/namespaces/tal"
+      xmlns:metal="http://xml.zope.org/namespaces/metal"
+      lang="en"
+      tal:define="portal_state context/@@plone_portal_state;
+                  context_state context/@@plone_context_state;
+                  plone_view context/@@plone;
+                  portal_url portal_state/portal_url;"
+      i18n:domain="plone">
+<head>
+  <div tal:replace="structure provider:plone.htmlhead"></div>
+  <link tal:replace="structure provider:plone.htmlhead.links" />
+  <base tal:attributes="href view/baseUrl" /><!--[if lt IE 7]></base><![endif]-->
+  <metal:block use-macro="view/resourceDirectory/@@plone.resourceeditor.filemanager/macros/resources" />
+  <style type="text/css">
+      ul.dynatree-container li { display: list-item; }
+  </style>
+</head>
+<body>
+  <metal:block use-macro="view/resourceDirectory/@@plone.resourceeditor.filemanager/macros/filemanager" />
+</body>
+</html>

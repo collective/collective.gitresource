@@ -43,6 +43,25 @@ class ResourceDirectory(object):
             return getSite()
         return self.__parent
 
+    # XXX: Required to make work as resource registry rendering context
+    # from Acquisition.interfaces.IAcquisitionWrapper
+    @property
+    def aq_explicit(self):
+        return getSite().aq_explicit
+
+    # XXX: Required to make work as resource registry rendering context
+    # from OFS.interfaces.ITraversable
+    def absolute_url(self):
+        return getSite().absolute_url() + '/++{0:s}++{1:s}'.format(
+            self._type, self.__name__)
+
+    # XXX: Required to make work as resource registry rendering context
+    # from Products.CMFCore.Skinnable.SkinnableObjectManager
+    # noinspection PyMethodMayBeStatic
+    @property
+    def getCurrentSkinName(self):
+        return getSite().getCurrentSkinName
+
     @property
     def __parent__(self):
         if self.__parent is None:

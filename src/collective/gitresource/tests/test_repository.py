@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import unittest
+from dulwich.repo import MemoryRepo
 
 from zope.component import getUtility
 
@@ -7,8 +8,10 @@ from collective.gitresource.interfaces import IRepositoryManager
 
 from collective.gitresource.iterator import BytesIterator
 from collective.gitresource.repository import Repository
+from collective.gitresource.repository import RedisRepo
 from collective.gitresource.repository import Head
 from collective.gitresource.testing import GITRESOURCE_FUNCTIONAL_TESTING
+from collective.gitresource.testing import HAS_REDIS
 
 
 class TestRepository(unittest.TestCase):
@@ -22,6 +25,12 @@ class TestRepository(unittest.TestCase):
 
     def test_repository(self):
         self.assertIsInstance(self.manager[self.repo.path], Repository)
+        if HAS_REDIS:
+            self.assertIsInstance(
+                self.manager[self.repo.path]._repo, RedisRepo)
+        else:
+            self.assertIsInstance(
+                self.manager[self.repo.path]._repo, MemoryRepo)
 
     def test_repository_branch(self):
         self.assertIsInstance(self.manager[self.repo.path]['master'], Head)
