@@ -8,9 +8,8 @@ services:
 #  - username: $SAUCE_USERNAME
 #  - access_key: $SAUCE_ACCESS_KEY
 install:
-- virtualenv test-env --no-setuptools
 - mkdir -p buildout-cache/downloads
-- test-env/bin/python bootstrap.py -c ${BUILDOUT}
+- python bootstrap.py -c ${BUILDOUT}
 - bin/buildout -N -t 3 -c ${BUILDOUT}
 #before_script:
 #- export DISPLAY=:99.0
