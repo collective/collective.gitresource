@@ -30,7 +30,7 @@ class ResourceDirectory(object):
         self._uri = uri
         self._branch = branch
 
-        self.directory = directory.strip('/')
+        self._directory = directory.strip('/')
 
     @property
     def repository(self):
@@ -65,7 +65,7 @@ class ResourceDirectory(object):
             return GitView(self, request, path)
         # Browser
         else:
-            path = '/'.join([self.directory, name]).strip('/')
+            path = '/'.join([self._directory, name]).strip('/')
             if self.isFile(name):
                 return File(self, request, name, self.repository[path])
             elif self.isDirectory(name):
@@ -78,39 +78,39 @@ class ResourceDirectory(object):
 
     def __repr__(self):
         return '<{0:s} object at {1:s} of {2:s}>'.format(
-            self.__class__.__name__, self.directory,
+            self.__class__.__name__, self._directory,
             repr(self.repository)[1:-1]
         )
 
     def __contains__(self, name):
-        path = '/'.join([self.directory, name]).strip('/')
+        path = '/'.join([self._directory, name]).strip('/')
         return path in self.repository
 
     def openFile(self, name):
-        path = '/'.join([self.directory, name]).strip('/')
+        path = '/'.join([self._directory, name]).strip('/')
         return self.repository[path]
 
     def readFile(self, name):
-        path = '/'.join([self.directory, name]).strip('/')
+        path = '/'.join([self._directory, name]).strip('/')
         return self.repository[path].read()
 
     def listDirectory(self):
-        directory = self.directory + '/'
+        directory = self._directory + '/'
         for path in self.repository:
             if path.startswith(directory):
                 if '/' not in path[len(directory):]:
                     yield path[len(directory):]
 
     def isDirectory(self, name):
-        path = '/'.join([self.directory, name]).strip('/')
+        path = '/'.join([self._directory, name]).strip('/')
         return path in self.repository and self.repository[path] is None
 
     def isFile(self, name):
-        path = '/'.join([self.directory, name]).strip('/')
+        path = '/'.join([self._directory, name]).strip('/')
         return path in self.repository and self.repository[path] is not None
 
     def exportZip(self, out):
-        base = self.directory
+        base = self._directory
         prefix = self.__name__
         zf = zipfile.ZipFile(out, 'w')
 
@@ -127,11 +127,11 @@ class ResourceDirectory(object):
         zf.close()
 
     def makeDirectory(self, name):
-        path = '/'.join([self.directory, name]).strip('/')
+        path = '/'.join([self._directory, name]).strip('/')
         self.repository[path] = None
 
     def writeFile(self, name, data):
-        path = '/'.join([self.directory, name]).strip('/')
+        path = '/'.join([self._directory, name]).strip('/')
         try:
             self.repository[path] = data.read()
         except AttributeError:
