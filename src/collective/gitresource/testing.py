@@ -22,7 +22,6 @@ from zope.traversing.interfaces import ITraversable
 
 from collective.gitresource.directory import ResourceDirectory
 
-
 try:
     pkg_resources.get_distribution('redis_collections')
 except pkg_resources.DistributionNotFound:
@@ -68,16 +67,17 @@ class GitResourceLayer(PloneSandboxLayer):
 
         # Set product configuration
         cfg = getConfiguration()
-        if HAS_REDIS:
-            cfg.product_config = {
-                'collective.gitresource': {
-                    'redis.host': 'localhost',
-                    'redis.port': '6379',
-                    'redis.db': '0'
-                }
+        cfg.product_config = {
+            'collective.gitresource': {
+                'localhost': 'admin:secret'
             }
-        else:
-            pass
+        }
+        if HAS_REDIS:
+            cfg.product_config['collective.gitresource'].update({
+                'redis.host': 'localhost',
+                'redis.port': '6379',
+                'redis.db': '0'
+            })
         setConfiguration(cfg)
 
         import plone.app.theming
@@ -88,31 +88,50 @@ class GitResourceLayer(PloneSandboxLayer):
 
 #       self.loadZCML(package=collective.gitresource,
 #                     name='testing.zcml')
-        self['repo'] = TestRepo()
 
     def setUpPloneSite(self, portal):
+        # Maybe we'll test theme-editor support later...
+        self.applyProfile(portal, "plone.app.theming:default")
+
+    def testSetUp(self):
         sm = getSiteManager()
 
+        # Create repository
+        self['repo'] = TestRepo()
+
         # Register repositories
-        directory = ResourceDirectory(
+        self['directory'] = ResourceDirectory(
             uri=self['repo'].path, branch='master', directory='',
             resource_type='test', name='repo')
-        sm.registerUtility(directory, IResourceDirectory, '++test++repo')
+        sm.registerUtility(
+            self['directory'], IResourceDirectory, '++test++repo')
 
-        directory = ResourceDirectory(
+        self['sub-directory'] = ResourceDirectory(
             uri=self['repo'].path, branch='master', directory='sub',
             resource_type='test', name='sub-repo')
-        sm.registerUtility(directory, IResourceDirectory, '++test++sub-repo')
+        sm.registerUtility(
+            self['sub-directory'], IResourceDirectory, '++test++sub-repo')
 
         # Register traverser
         sm.registerAdapter(
             name='test', factory=TestTraverser,
             required=(Interface, IRequest), provided=ITraversable)
 
-        # Maybe we'll test theme-editor support later...
-        self.applyProfile(portal, "plone.app.theming:default")
+    def testTearDown(self):
+        sm = getSiteManager()
 
-    def tearDownZope(self, app):
+        # Un-register traverser
+        sm.unregisterAdapter(
+            name='test', factory=TestTraverser,
+            required=(Interface, IRequest), provided=ITraversable)
+
+        # Un-register resource registries
+        sm.unregisterUtility(
+            self['sub-directory'], IResourceDirectory, '++test++sub-repo')
+        sm.unregisterUtility(
+            self['directory'], IResourceDirectory, '++test++repo')
+
+        # Remove repository
         shutil.rmtree(self['repo'].path)
 
 GITRESOURCE_FIXTURE = GitResourceLayer()

@@ -1,8 +1,13 @@
 # -*- coding: utf-8 -*-
 import unittest
+
 from zope.component import getUtility
+
 from collective.gitresource.interfaces import IRepositoryManager
+
 from collective.gitresource.iterator import BytesIterator
+from collective.gitresource.repository import Repository
+from collective.gitresource.repository import Head
 from collective.gitresource.testing import GITRESOURCE_FUNCTIONAL_TESTING
 
 
@@ -16,18 +21,18 @@ class TestRepository(unittest.TestCase):
         self.manager = getUtility(IRepositoryManager)
 
     def test_repository(self):
-        self.assertIn(self.repo.path, self.manager)
+        self.assertIsInstance(self.manager[self.repo.path], Repository)
 
-    def test_repository_master(self):
-        self.assertIn('master', self.manager[self.repo.path])
+    def test_repository_branch(self):
+        self.assertIsInstance(self.manager[self.repo.path]['master'], Head)
 
-    def test_repository_master_names(self):
+    def test_repository_branch_names(self):
         self.assertIn('foo', self.manager[self.repo.path]['master'])
         self.assertIn('bar', self.manager[self.repo.path]['master'])
         self.assertIn('sub/foo', self.manager[self.repo.path]['master'])
         self.assertIn('sub/bar', self.manager[self.repo.path]['master'])
 
-    def test_repository_master_data(self):
+    def test_repository_branch_data(self):
         self.assertIsInstance(
             self.manager[self.repo.path]['master']['foo'], BytesIterator)
         self.assertEqual(
