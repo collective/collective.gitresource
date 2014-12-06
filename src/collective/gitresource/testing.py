@@ -20,6 +20,9 @@ from zope.interface import Interface
 from zope.publisher.interfaces import IRequest
 from zope.traversing.interfaces import ITraversable
 
+from plone.app.testing.interfaces import SITE_OWNER_NAME
+from plone.app.testing.interfaces import SITE_OWNER_PASSWORD
+
 from collective.gitresource.directory import ResourceDirectory
 
 try:
@@ -69,7 +72,8 @@ class GitResourceLayer(PloneSandboxLayer):
         cfg = getConfiguration()
         cfg.product_config = {
             'collective.gitresource': {
-                'localhost': 'admin:secret'
+                os.environ.get('ZSERVER_HOST', 'localhost:'):
+                '{0:s}:{1:s}'.format(SITE_OWNER_NAME, SITE_OWNER_PASSWORD)
             }
         }
         if HAS_REDIS:
