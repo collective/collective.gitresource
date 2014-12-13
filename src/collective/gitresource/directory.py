@@ -93,11 +93,14 @@ class ResourceDirectory(object):
         raise NotFound
 
     def __getitem__(self, name):
-        return self.publishTraverse(None, name)
+        try:
+            return self.publishTraverse(None, name)
+        except NotFound:
+            raise KeyError(name)
 
     def __repr__(self):
         return '<{0:s} object at {1:s} of {2:s}>'.format(
-            self.__class__.__name__, self._directory,
+            self.__class__.__name__, self._directory or '/',
             repr(self.repository)[1:-1]
         )
 
