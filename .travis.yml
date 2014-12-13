@@ -1,23 +1,12 @@
 language: python
 python:
 - 2.7
+sudo: false
 services:
 - redis
-#addons:
-#  sauce_connect:
-#  - username: $SAUCE_USERNAME
-#  - access_key: $SAUCE_ACCESS_KEY
 install:
-- mkdir -p buildout-cache/downloads
 - python bootstrap.py -c ${BUILDOUT}
 - bin/buildout -N -t 3 -c ${BUILDOUT}
-#before_script:
-#- export DISPLAY=:99.0
-#- sh -e /etc/init.d/xvfb start
-#before_script:
-#- gem install travis-artifacts
-#after_script:
-#- travis-artifacts upload --path parts/test
 script:
 - bin/test
 - bin/code-analysis
@@ -25,9 +14,6 @@ env:
   matrix:
   - BUILDOUT=travis.cfg
   - BUILDOUT=travis-redis.cfg
-#  global:
-#  - ARTIFACTS_S3_BUCKET=example.product
-#  - ROBOT_BUILD_NUMBER=travis-$TRAVIS_BUILD_NUMBER
-#  - ROBOT_REMOTE_URL=http://$SAUCE_USERNAME:$SAUCE_ACCESS_KEY@ondemand.saucelabs.com:80/wd/hub
-#  matrix:
-#  - ROBOT_BROWSER=firefox ROBOT_DESIRED_CAPABILITIES=tunnel-identifier:$TRAVIS_JOB_NUMBER
+cache:
+  directories:
+  - eggs
