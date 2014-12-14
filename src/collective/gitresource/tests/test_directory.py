@@ -252,6 +252,30 @@ class TestResourceDirectoryAPI(unittest.TestCase):
         with open(os.path.join(repo.path, 'foo'), 'r') as fp:
             self.assertEqual(fp.read(), 'hello')
 
+    def test_write_file_empty(self):
+        self.a.writeFile('foo', BytesIO(''))
+        self.assertTrue(self.a.isFile('foo'))
+        self.assertEqual(self.a.readFile('foo'), '')
+
+    def test_write_file_empty_auto_commit_push(self):
+        with open(os.path.join(self.layer['checkout'].path, 'foo'), 'r') as fp:
+            self.assertEqual(fp.read(), 'monty')
+
+        self.test_write_file_empty()
+
+        repo = Repo.init(self._mkdtemp())
+        client, host_path = get_transport_and_path(self.layer['repo'].path)
+        refs = client.fetch(
+            host_path, repo,
+            determine_wants=repo.object_store.determine_wants_all
+        )
+        repo["HEAD"] = refs["HEAD"]
+        repo["refs/heads/master"] = refs["refs/heads/master"]
+        repo._build_tree()
+
+        with open(os.path.join(repo.path, 'foo'), 'r') as fp:
+            self.assertEqual(fp.read(), '')
+
     def test_write_file_new(self):
         self.a.writeFile('world', BytesIO('hello'))
         self.assertTrue(self.a.isFile('world'))
@@ -272,3 +296,24 @@ class TestResourceDirectoryAPI(unittest.TestCase):
 
         with open(os.path.join(repo.path, 'world'), 'r') as fp:
             self.assertEqual(fp.read(), 'hello')
+
+    def test_write_file_new_empty(self):
+        self.a.writeFile('world', BytesIO(''))
+        self.assertTrue(self.a.isFile('world'))
+        self.assertEqual(self.a.readFile('world'), '')
+
+    def test_write_file_new_empty_auto_commit_push(self):
+        self.test_write_file_new_empty()
+
+        repo = Repo.init(self._mkdtemp())
+        client, host_path = get_transport_and_path(self.layer['repo'].path)
+        refs = client.fetch(
+            host_path, repo,
+            determine_wants=repo.object_store.determine_wants_all
+        )
+        repo["HEAD"] = refs["HEAD"]
+        repo["refs/heads/master"] = refs["refs/heads/master"]
+        repo._build_tree()
+
+        with open(os.path.join(repo.path, 'world'), 'r') as fp:
+            self.assertEqual(fp.read(), '')
