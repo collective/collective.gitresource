@@ -5,6 +5,7 @@ import shutil
 
 from App.config import getConfiguration
 from App.config import setConfiguration
+from dulwich.client import get_transport_and_path
 from dulwich.repo import Repo
 import pkg_resources
 from plone.app.robotframework.testing import REMOTE_LIBRARY_BUNDLE_FIXTURE
@@ -34,29 +35,40 @@ else:
 
 
 def TestRepo():
-    repo = Repo.init(tempfile.mkdtemp())
+    checkout = Repo.init(tempfile.mkdtemp())
 
-    with open(os.path.join(repo.path, 'foo'), 'w') as fp:
+    with open(os.path.join(checkout.path, 'foo'), 'w') as fp:
         fp.write('monty')
-    with open(os.path.join(repo.path, 'bar'), 'w') as fp:
+    with open(os.path.join(checkout.path, 'bar'), 'w') as fp:
         fp.write('python')
 
-    repo_sub = os.path.join(repo.path, 'sub')
-    os.mkdir(repo_sub)
+    sub_path = os.path.join(checkout.path, 'sub')
+    os.mkdir(sub_path)
 
-    with open(os.path.join(repo_sub, 'foo'), 'w') as fp:
+    with open(os.path.join(sub_path, 'foo'), 'w') as fp:
         fp.write('sub_monty')
-    with open(os.path.join(repo_sub, 'bar'), 'w') as fp:
+    with open(os.path.join(sub_path, 'bar'), 'w') as fp:
         fp.write('sub_python')
 
-    repo.stage(['foo', 'bar',
-                os.path.join('sub', 'foo'),
-                os.path.join('sub', 'bar')])
-    repo.do_commit(
+    checkout.stage(['foo', 'bar',
+                    os.path.join('sub', 'foo'),
+                    os.path.join('sub', 'bar')])
+    checkout.do_commit(
         'The first commit',
         committer='John Doe <john.doe@example.com>'
     )
-    return repo
+
+    bare = Repo.init_bare(tempfile.mkdtemp())
+    client, host_path = get_transport_and_path(checkout.path)
+
+    refs = client.fetch(
+        host_path, bare,
+        determine_wants=bare.object_store.determine_wants_all,
+    )
+    bare["HEAD"] = refs["HEAD"]
+    bare["refs/heads/master"] = refs["refs/heads/master"]
+
+    return bare, checkout
 
 
 class TestTraverser(ResourceTraverser):
@@ -101,7 +113,7 @@ class GitResourceLayer(PloneSandboxLayer):
         sm = getSiteManager()
 
         # Create repository
-        self['repo'] = TestRepo()
+        self['repo'], self['checkout'] = TestRepo()
 
         # Register repositories
         self['directory'] = ResourceDirectory(
@@ -136,6 +148,7 @@ class GitResourceLayer(PloneSandboxLayer):
             self['directory'], IResourceDirectory, '++test++repo')
 
         # Remove repository
+        shutil.rmtree(self['checkout'].path)
         shutil.rmtree(self['repo'].path)
 
 GITRESOURCE_FIXTURE = GitResourceLayer()

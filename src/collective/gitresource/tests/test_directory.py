@@ -1,7 +1,16 @@
 # -*- coding: utf-8 -*-
+import os
+from io import BytesIO
+import tempfile
 import unittest
+import shutil
+import zipfile
+
+from dulwich.client import get_transport_and_path
+from dulwich.repo import Repo
 from plone.resource.interfaces import IResourceDirectory
 from zope.component import getUtility
+
 from collective.gitresource.directory import ResourceDirectory
 from collective.gitresource.file import File
 from collective.gitresource.iterator import BytesIterator
@@ -68,11 +77,23 @@ class TestResourceDirectoryAPI(unittest.TestCase):
 
     layer = GITRESOURCE_FUNCTIONAL_TESTING
 
+    paths = None
+
     def setUp(self):
         self.portal = self.layer['portal']
         self.a = getUtility(IResourceDirectory, name='++test++repo')
         self.b = getUtility(IResourceDirectory, name='++test++sub-repo')
         self.repo = self.layer['repo']
+        self.paths = []
+
+    def tearDown(self):
+        for path in self.paths:
+            shutil.rmtree(path)
+
+    def _mkdtemp(self):
+        path = tempfile.mkdtemp()
+        self.paths.append(path)
+        return path
 
     def test_is_file(self):
         self.assertTrue(self.a.isFile('foo'))
@@ -132,6 +153,19 @@ class TestResourceDirectoryAPI(unittest.TestCase):
         self.assertIn('foo', self.b)
         self.assertIn('bar', self.b)
 
+    def test_list_directory(self):
+        a = list(self.a.listDirectory())
+        self.assertIn('foo', a)
+        self.assertIn('bar', a)
+        self.assertIn('sub', a)
+
+        self.assertNotIn('sub/foo', a)
+        self.assertNotIn('sub/bar', a)
+
+        b = list(self.b.listDirectory())
+        self.assertIn('foo', b)
+        self.assertIn('bar', b)
+
     def test_not_contains(self):
         self.assertNotIn('sub', self.b)
         self.assertNotIn('sub/foo', self.b)
@@ -161,3 +195,80 @@ class TestResourceDirectoryAPI(unittest.TestCase):
     def test_getitem_raise(self):
         self.assertRaises(KeyError, self.b.__getitem__, 'sub/foo')
         self.assertRaises(KeyError, self.b.__getitem__, 'sub/bar')
+
+    def test_export_zip(self):
+        fp = BytesIO()
+        self.a.exportZip(fp)
+        fp.seek(0)
+        zf = zipfile.ZipFile(fp)
+
+        namelist = zf.namelist()
+        self.assertIn('repo/foo', namelist)
+        self.assertEqual(zf.read('repo/foo'), 'monty')
+        self.assertIn('repo/bar', namelist)
+        self.assertEqual(zf.read('repo/bar'), 'python')
+        self.assertIn('repo/sub/foo', namelist)
+        self.assertEqual(zf.read('repo/sub/foo'), 'sub_monty')
+        self.assertIn('repo/sub/bar', namelist)
+        self.assertEqual(zf.read('repo/sub/bar'), 'sub_python')
+
+        fp = BytesIO()
+        self.b.exportZip(fp)
+        fp.seek(0)
+        zf = zipfile.ZipFile(fp)
+
+        namelist = zf.namelist()
+        self.assertIn('sub-repo/foo', namelist)
+        self.assertEqual(zf.read('sub-repo/foo'), 'sub_monty')
+        self.assertIn('sub-repo/bar', namelist)
+        self.assertEqual(zf.read('sub-repo/bar'), 'sub_python')
+
+    def test_make_directory(self):
+        self.a.makeDirectory('sub-new')
+        self.assertTrue(self.a.isDirectory('sub-new'))
+        self.assertFalse(self.a.isFile('sub-new'))
+
+    def test_write_file(self):
+        self.a.writeFile('foo', BytesIO('hello'))
+        self.assertTrue(self.a.isFile('foo'))
+        self.assertEqual(self.a.readFile('foo'), 'hello')
+
+    def test_write_file_auto_commit_push(self):
+        with open(os.path.join(self.layer['checkout'].path, 'foo'), 'r') as fp:
+            self.assertEqual(fp.read(), 'monty')
+
+        self.test_write_file()
+
+        repo = Repo.init(self._mkdtemp())
+        client, host_path = get_transport_and_path(self.layer['repo'].path)
+        refs = client.fetch(
+            host_path, repo,
+            determine_wants=repo.object_store.determine_wants_all
+        )
+        repo["HEAD"] = refs["HEAD"]
+        repo["refs/heads/master"] = refs["refs/heads/master"]
+        repo._build_tree()
+
+        with open(os.path.join(repo.path, 'foo'), 'r') as fp:
+            self.assertEqual(fp.read(), 'hello')
+
+    def test_write_file_new(self):
+        self.a.writeFile('world', BytesIO('hello'))
+        self.assertTrue(self.a.isFile('world'))
+        self.assertEqual(self.a.readFile('world'), 'hello')
+
+    def test_write_file_new_auto_commit_push(self):
+        self.test_write_file_new()
+
+        repo = Repo.init(self._mkdtemp())
+        client, host_path = get_transport_and_path(self.layer['repo'].path)
+        refs = client.fetch(
+            host_path, repo,
+            determine_wants=repo.object_store.determine_wants_all
+        )
+        repo["HEAD"] = refs["HEAD"]
+        repo["refs/heads/master"] = refs["refs/heads/master"]
+        repo._build_tree()
+
+        with open(os.path.join(repo.path, 'world'), 'r') as fp:
+            self.assertEqual(fp.read(), 'hello')

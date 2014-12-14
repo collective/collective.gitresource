@@ -117,7 +117,7 @@ class ResourceDirectory(object):
         return self.repository[path].read()
 
     def listDirectory(self):
-        directory = self._directory + '/'
+        directory = (self._directory + '/').lstrip('/')
         for path in self.repository:
             if path.startswith(directory):
                 if '/' not in path[len(directory):]:
@@ -132,14 +132,15 @@ class ResourceDirectory(object):
         return path in self.repository and self.repository[path] is not None
 
     def exportZip(self, out):
-        base = self._directory
+        base = (self._directory + '/').lstrip('/')
         prefix = self.__name__
         zf = zipfile.ZipFile(out, 'w')
 
         def export(directory, output):
             for name in directory.listDirectory():
                 if directory.isFile(name):
-                    path = '/'.join([directory.directory, name]).strip('/')
+                    # noinspection PyProtectedMember
+                    path = '/'.join([directory._directory, name]).strip('/')
                     output.writestr('/'.join([prefix, path[len(base):]]),
                                     directory.readFile(name))
                 elif directory.isDirectory(name):
