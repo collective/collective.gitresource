@@ -5,6 +5,7 @@
     i18n_domain="collective.gitresource">
 
   <include package="plone.resourceeditor" />
+  <include package="plone.app.controlpanel" />
 
   <browser:defaultView
       name="manage"
